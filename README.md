@@ -8,8 +8,8 @@ This filter does the following:
 
 # other Filters
 There are also some other filters out there (which I didn't find sufficient for our use case):
-* [IMU Tools](wiki.ros.org/imu_tools)
-* [IMU Pipeline](wiki.ros.org/imu_pipeline)
+* [IMU Tools](https://wiki.ros.org/imu_tools)
+* [IMU Pipeline](https://wiki.ros.org/imu_pipeline)
 * [IMU Pipeline from dawonn](https://github.com/dawonn/imu_pipeline)
 
 # REP 145
