@@ -1,0 +1,9 @@
+# default transformation parameter
+
+default_tf_param:
+    x_trans: 0.0
+    y_trans: 0.0
+    z_trans: 0.0
+    roll:    0.0
+    pitch:   0.0
+    yaw:     0.0
