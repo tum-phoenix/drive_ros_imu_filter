@@ -3,7 +3,12 @@ Yet another IMU filter.
 
 This filter does the following:
 * transform IMU message from one tf frame to another
-* autodetect tf parameter, when standing still
+* autodetect tf parameter, when standing still (autocalibration)
+
+# Limitations
+Currently the following limitations are present:
+* autocalibration only for roll and pitch angle
+* transformation does not include angular velocity (currently only rotation)
 
 
 # other Filters
