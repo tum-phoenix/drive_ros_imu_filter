@@ -4,6 +4,7 @@
 #include <cmath>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include "ros/ros.h"
 

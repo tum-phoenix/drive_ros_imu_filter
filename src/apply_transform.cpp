@@ -14,7 +14,8 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
 
   if(!received_first_msg)
   {
-    ROS_INFO("Received first IMU message. Wait 1s to let the broadcaster some time to publish");
+    ROS_INFO("Received first IMU message.");
+    ROS_INFO("Wait 1s to let the broadcaster some time to publish");
     ros::Duration d(1);
     d.sleep();
     received_first_msg = true;
