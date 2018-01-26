@@ -1,6 +1,6 @@
 #include "drive_ros_imu_filter/apply_transform.h"
 
-static std::string target_frame;
+static std::string vehicle_frame;
 
 ros::Publisher imu_pub;
 tf2_ros::Buffer* tf2_buffer;
@@ -15,7 +15,7 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
   if(!received_first_msg)
   {
     ROS_INFO("Received first IMU message.");
-    ROS_INFO("Wait 1s to let the broadcaster some time to publish");
+    ROS_INFO("Wait 1s to let the broadcaster some time to publish.");
     ros::Duration d(1);
     d.sleep();
     received_first_msg = true;
@@ -25,7 +25,7 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
   try
   {
     sensor_msgs::Imu imu_out;
-    tf2_buffer->transform(*msg, imu_out, target_frame);
+    tf2_buffer->transform(*msg, imu_out, vehicle_frame);
     imu_pub.publish(imu_out);
   }
   catch (tf2::TransformException ex)
@@ -49,8 +49,8 @@ int main(int argc, char **argv)
 
 
   // get target frame
-  target_frame = pnh.param<std::string>("target_frame", "");
-  ROS_INFO_STREAM("Loaded target frame: " << target_frame);
+  vehicle_frame = pnh.param<std::string>("vehicle_frame", "");
+  ROS_INFO_STREAM("Loaded vehicle frame: " << vehicle_frame);
 
   // setup subscriber and publisher
   ros::Subscriber imu_sub = pnh.subscribe("imu_in", 10, imuCallback);

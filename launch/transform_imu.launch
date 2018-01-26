@@ -6,11 +6,8 @@
     <!-- input imu topic name -->
     <arg name="output_topic" default="/imu/data"/>
 
-    <!--
-         transform to this frame and publish tf
-         (source frame will be used from incoming message)
-     -->
-    <arg name="target_frame" default="cog"/>
+    <!-- frame of the vehicle (IMU frame will be used from IMU msg)-->
+    <arg name="vehicle_frame" default="cog"/>
 
     <!-- define nice value of process (lower means higher priority) [-20;19] -->
     <!-- more infos: https://en.wikipedia.org/wiki/Nice_(Unix) -->
@@ -37,14 +34,14 @@
           type="apply_transform" output="$(arg output)" launch-prefix="$(arg nice)">
         <remap from="~/imu_in" to="$(arg input_topic)"/>
         <remap from="~/imu_out" to="$(arg output_topic)"/>
-        <param name="target_frame" type="str" value="$(arg target_frame)" />
+        <param name="vehicle_frame" type="str" value="$(arg vehicle_frame)" />
     </node>
 
     <!-- broadcast transform -->
     <node name="imu_broadcast_transform" pkg="drive_ros_imu_filter"
           type="broadcast_transform" output="$(arg output)" launch-prefix="$(arg nice)">
         <remap from="~/imu_in" to="$(arg input_topic)"/>
-        <param name="target_frame" type="str" value="$(arg target_frame)" />
+        <param name="vehicle_frame" type="str" value="$(arg vehicle_frame)" />
         <param name="no_motion_acc_thres" type="double" value="$(arg no_motion_acc_thres)" />
         <param name="no_motion_gyro_thres" type="double" value="$(arg no_motion_gyro_thres)" />
         <param name="buffer_length" type="int" value="$(arg buffer_length)" />

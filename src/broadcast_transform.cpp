@@ -2,8 +2,8 @@
 
 
 static geometry_msgs::Transform current_trafo;
-static std::string target_frame;
-static std::string source_frame;
+static std::string vehicle_frame;
+static std::string imu_frame;
 static std::mutex trafo_mu;
 
 
@@ -93,10 +93,10 @@ bool calculateTrafoRotation(void)
   yaw = yaw;
 
   // get pitch
-  pitch = -asin(a_x_mean / GRAVITY);
+  pitch = asin(a_x_mean / GRAVITY);
 
   // get roll
-  roll = -atan(a_y_mean / a_z_mean);
+  roll = atan(a_y_mean / a_z_mean);
 
   // write Euler angles to new trafo
   tf::Quaternion q_new;
@@ -119,10 +119,10 @@ bool calculateTrafoRotation(void)
 void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
 {
 
-  if(source_frame.empty())
+  if(imu_frame.empty())
   {
-    source_frame = msg->header.frame_id;
-    ROS_INFO_STREAM("Got first IMU msg. Setting source frame to: " << source_frame);
+    imu_frame = msg->header.frame_id;
+    ROS_INFO_STREAM("Got first IMU msg. Setting IMU frame to: " << imu_frame);
     return;
   }
 
@@ -134,8 +134,8 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
 
     if(*buffer_length < msg_buffer.size() && enable_autocali)
     {
-      ROS_INFO_STREAM("Detected no motion for " << msg_buffer.size() <<" messages.");
-      ROS_INFO_STREAM("Start autocalibration...");
+      ROS_DEBUG_STREAM("Detected no motion for " << msg_buffer.size() <<" messages.");
+      ROS_DEBUG_STREAM("Start autocalibration...");
 
       // recalculate msg buffer
       calculateTrafoRotation();
@@ -207,12 +207,12 @@ void tf_broadcast(void)
   ros::Rate r(tf_pub_rate);
   while(ros::ok())
   {
-    if(!source_frame.empty())
+    if(!imu_frame.empty())
     {
       geometry_msgs::TransformStamped transformStamped;
       transformStamped.header.stamp = ros::Time::now();
-      transformStamped.header.frame_id = source_frame;
-      transformStamped.child_frame_id = target_frame;
+      transformStamped.header.frame_id = vehicle_frame;
+      transformStamped.child_frame_id = imu_frame;
 
       trafo_mu.lock();
       transformStamped.transform = current_trafo;
@@ -240,9 +240,9 @@ int main(int argc, char **argv)
   // setup tf 2 stuff
   tf2_broadcast = new tf2_ros::StaticTransformBroadcaster();
 
-  // get target frame
-  target_frame = pnh.param<std::string>("target_frame", "");
-  ROS_INFO_STREAM("Loaded target frame: " << target_frame);
+  // get vehicle frame
+  vehicle_frame = pnh.param<std::string>("vehicle_frame", "");
+  ROS_INFO_STREAM("Loaded vehicle frame: " << vehicle_frame);
 
   // get calibration parameters
   no_motion_acc_thres =  new const double(pnh.param<double>("no_motion_acc_thres", 0));
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
   enable_autocali =      new const bool(pnh.param<bool>("enable_autocali", 100));
 
   // clear source frame (will be filled when first imu message arrives)
-  source_frame.clear();
+  imu_frame.clear();
 
   // clear transformation buffer
   msg_buffer.clear();
