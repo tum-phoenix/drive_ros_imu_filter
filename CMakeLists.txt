@@ -210,3 +210,14 @@ target_link_libraries(broadcast_transform
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+if(CATKIN_ENABLE_TESTING)
+    find_package(rostest REQUIRED)
+
+    # unit tests
+    add_rostest_gtest(transform_imu_unit_test launch/transform_imu_unit.test
+        test/tf2_sensor_msgs_test.cpp
+        )
+    target_link_libraries(transform_imu_unit_test ${catkin_LIBRARIES})
+
+endif()

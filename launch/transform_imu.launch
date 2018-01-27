@@ -7,7 +7,7 @@
     <arg name="output_topic" default="/imu/data"/>
 
     <!-- frame of the vehicle (IMU frame will be used from IMU msg)-->
-    <arg name="vehicle_frame" default="cog"/>
+    <arg name="vehicle_frame" default="rear_axis_middle_ground"/>
 
     <!-- define nice value of process (lower means higher priority) [-20;19] -->
     <!-- more infos: https://en.wikipedia.org/wiki/Nice_(Unix) -->

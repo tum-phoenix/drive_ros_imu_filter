@@ -84,13 +84,21 @@ namespace tf2
 
     imu_out.header = t_in.header;
 
-    // Discard translation, only use orientation for IMU transform
-    Eigen::Quaternion<double> r(
-        t_in.transform.rotation.w, t_in.transform.rotation.x, t_in.transform.rotation.y, t_in.transform.rotation.z);
+
+    Eigen::Vector3d trans(t_in.transform.translation.x,
+                          t_in.transform.translation.y,
+                          t_in.transform.translation.z);
+
+    Eigen::Quaternion<double> r(t_in.transform.rotation.w,
+                                t_in.transform.rotation.x,
+                                t_in.transform.rotation.y,
+                                t_in.transform.rotation.z);
+
     Eigen::Transform<double,3,Eigen::Affine> t(r);
 
-    Eigen::Vector3d vel = t * Eigen::Vector3d(
-        imu_in.angular_velocity.x, imu_in.angular_velocity.y, imu_in.angular_velocity.z);
+    Eigen::Vector3d vel = t * Eigen::Vector3d(imu_in.angular_velocity.x,
+                                              imu_in.angular_velocity.y,
+                                              imu_in.angular_velocity.z);
 
     imu_out.angular_velocity.x = vel.x();
     imu_out.angular_velocity.y = vel.y();
@@ -98,8 +106,18 @@ namespace tf2
 
     transformCovariance(imu_in.angular_velocity_covariance, imu_out.angular_velocity_covariance, r);
 
-    Eigen::Vector3d accel = t * Eigen::Vector3d(
-        imu_in.linear_acceleration.x, imu_in.linear_acceleration.y, imu_in.linear_acceleration.z);
+
+    /* assumptions being made:
+     * - translation is fixed over time (rigid body)
+     * - Euler acceleration is neglected (otherwise we would have to break
+     *   the function structure in order to derive the angular velocity)
+     */
+
+
+    Eigen::Vector3d accel = t * Eigen::Vector3d(imu_in.linear_acceleration.x,
+                                                imu_in.linear_acceleration.y,
+                                                imu_in.linear_acceleration.z)
+                            + vel.cross(vel.cross(trans));
 
 
     imu_out.linear_acceleration.x = accel.x();
@@ -108,8 +126,10 @@ namespace tf2
 
     transformCovariance(imu_in.linear_acceleration_covariance, imu_out.linear_acceleration_covariance, r);
 
-    Eigen::Quaternion<double> orientation = r * Eigen::Quaternion<double>(
-        imu_in.orientation.w, imu_in.orientation.x, imu_in.orientation.y, imu_in.orientation.z) * r.inverse();
+    Eigen::Quaternion<double> orientation = r * Eigen::Quaternion<double>(imu_in.orientation.w,
+                                                                          imu_in.orientation.x,
+                                                                          imu_in.orientation.y,
+                                                                          imu_in.orientation.z) * r.inverse();
 
     imu_out.orientation.w = orientation.w();
     imu_out.orientation.x = orientation.x();
