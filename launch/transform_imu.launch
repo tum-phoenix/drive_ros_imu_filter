@@ -1,10 +1,10 @@
 <launch>
 
     <!-- input imu topic name -->
-    <arg name="input_topic" default="/imu"/>
+    <arg name="input_topic" default="/from_mav/imu/data_raw"/>
 
     <!-- input imu topic name -->
-    <arg name="output_topic" default="/imu/data"/>
+    <arg name="output_topic" default="/from_mav/imu/data"/>
 
     <!-- frame of the vehicle (IMU frame will be used from IMU msg)-->
     <arg name="vehicle_frame" default="rear_axis_middle_ground"/>
