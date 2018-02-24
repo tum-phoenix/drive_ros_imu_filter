@@ -20,7 +20,7 @@
     <arg name="config_file" default="$(find drive_ros_imu_filter)/config/cc2017_car.yaml" />
 
     <!-- no motion thresholds (if values are below this value for X times, it is considered no motion) -->
-    <arg name="no_motion_acc_thres" default="0.1" />
+    <arg name="no_motion_acc_thres" default="1.5" />
     <arg name="no_motion_gyro_thres" default="0.05" />
 
     <!-- number of consecutive measurements before we recalibrate -->
@@ -28,6 +28,9 @@
 
     <!-- enables the autocalibration function (when car detects no motion -> run autocalibration) -->
     <arg name="autocali" default="true" />
+
+    <!-- output differences (only recommended when trying to find the correct thresholds)-->
+    <arg name="output_diff" default="false" />
 
     <!-- apply transform -->
     <node name="imu_apply_transform" pkg="drive_ros_imu_filter"
@@ -46,6 +49,7 @@
         <param name="no_motion_gyro_thres" type="double" value="$(arg no_motion_gyro_thres)" />
         <param name="buffer_length" type="int" value="$(arg buffer_length)" />
         <param name="autocali" type="bool" value="$(arg autocali)" />
+        <param name="output_diff" type="bool" value="$(arg output_diff)" />
         <rosparam command="load" file="$(arg config_file)"/>
     </node>
 

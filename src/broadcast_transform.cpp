@@ -23,6 +23,8 @@ const int* buffer_length;
 
 const bool* enable_autocali;
 
+const bool* output_diff;
+
 const float GRAVITY = 9.81;
 
 enum{
@@ -48,12 +50,25 @@ bool detectNoMotion(const sensor_msgs::Imu::ConstPtr &msg)
   ret &= (*no_motion_gyro_thres
           > std::fabs(static_cast<float>(msg->angular_velocity.z - old_msg.angular_velocity.z)));
 
-  ret &= (*no_motion_gyro_thres
+  ret &= (*no_motion_acc_thres
           > std::fabs(static_cast<float>(msg->linear_acceleration.x - old_msg.linear_acceleration.x)));
-  ret &= (*no_motion_gyro_thres
+  ret &= (*no_motion_acc_thres
           > std::fabs(static_cast<float>(msg->linear_acceleration.y - old_msg.linear_acceleration.y)));
-  ret &= (*no_motion_gyro_thres
+  ret &= (*no_motion_acc_thres
           > std::fabs(static_cast<float>(msg->linear_acceleration.z - old_msg.linear_acceleration.z)));
+
+
+  if(*output_diff)
+  {
+    ROS_INFO_STREAM(   " gyro_x: " << std::fabs(static_cast<float>(msg->angular_velocity.x - old_msg.angular_velocity.x))
+                    << " gyro_y: " << std::fabs(static_cast<float>(msg->angular_velocity.y - old_msg.angular_velocity.y))
+                    << " gyro_z: " << std::fabs(static_cast<float>(msg->angular_velocity.z - old_msg.angular_velocity.z))
+                    << " acc_x: "  << std::fabs(static_cast<float>(msg->linear_acceleration.x - old_msg.linear_acceleration.x))
+                    << " acc_y: "  << std::fabs(static_cast<float>(msg->linear_acceleration.y - old_msg.linear_acceleration.y))
+                    << " acc_z: "  << std::fabs(static_cast<float>(msg->linear_acceleration.z - old_msg.linear_acceleration.z)));
+  }
+
+
 
   return ret;
 }
@@ -93,7 +108,7 @@ bool calculateTrafoRotation(void)
   yaw = yaw;
 
   // get pitch
-  pitch = asin(a_x_mean / GRAVITY);
+  pitch = -asin(a_x_mean / GRAVITY);
 
   // get roll
   roll = atan(a_y_mean / a_z_mean);
@@ -248,7 +263,8 @@ int main(int argc, char **argv)
   no_motion_acc_thres =  new const double(pnh.param<double>("no_motion_acc_thres", 0));
   no_motion_gyro_thres = new const double(pnh.param<double>("no_motion_gyro_thres", 0));
   buffer_length =        new const int(pnh.param<int>("buffer_length", 100));
-  enable_autocali =      new const bool(pnh.param<bool>("enable_autocali", 100));
+  enable_autocali =      new const bool(pnh.param<bool>("enable_autocali", true));
+  output_diff =          new const bool(pnh.param<bool>("output_diff", false));
 
   // clear source frame (will be filled when first imu message arrives)
   imu_frame.clear();
