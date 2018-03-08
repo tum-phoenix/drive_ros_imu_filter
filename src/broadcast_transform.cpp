@@ -9,7 +9,7 @@ static std::mutex trafo_mu;
 
 static int no_motion_ct;
 
-static sensor_msgs::Imu old_msg;
+static sensor_msgs::Imu msg_old;
 static std::vector<sensor_msgs::Imu> msg_buffer;
 
 tf2_ros::StaticTransformBroadcaster* tf2_broadcast;
@@ -44,28 +44,28 @@ bool detectNoMotion(const sensor_msgs::Imu::ConstPtr &msg)
   bool ret = NO_MOTION;
 
   ret &= (*no_motion_gyro_thres
-          > std::fabs(static_cast<float>(msg->angular_velocity.x - old_msg.angular_velocity.x)));
+          > std::fabs(static_cast<float>(msg->angular_velocity.x - msg_old.angular_velocity.x)));
   ret &= (*no_motion_gyro_thres
-          > std::fabs(static_cast<float>(msg->angular_velocity.y - old_msg.angular_velocity.y)));
+          > std::fabs(static_cast<float>(msg->angular_velocity.y - msg_old.angular_velocity.y)));
   ret &= (*no_motion_gyro_thres
-          > std::fabs(static_cast<float>(msg->angular_velocity.z - old_msg.angular_velocity.z)));
+          > std::fabs(static_cast<float>(msg->angular_velocity.z - msg_old.angular_velocity.z)));
 
   ret &= (*no_motion_acc_thres
-          > std::fabs(static_cast<float>(msg->linear_acceleration.x - old_msg.linear_acceleration.x)));
+          > std::fabs(static_cast<float>(msg->linear_acceleration.x - msg_old.linear_acceleration.x)));
   ret &= (*no_motion_acc_thres
-          > std::fabs(static_cast<float>(msg->linear_acceleration.y - old_msg.linear_acceleration.y)));
+          > std::fabs(static_cast<float>(msg->linear_acceleration.y - msg_old.linear_acceleration.y)));
   ret &= (*no_motion_acc_thres
-          > std::fabs(static_cast<float>(msg->linear_acceleration.z - old_msg.linear_acceleration.z)));
+          > std::fabs(static_cast<float>(msg->linear_acceleration.z - msg_old.linear_acceleration.z)));
 
 
   if(*output_diff)
   {
-    ROS_INFO_STREAM(   " gyro_x: " << std::fabs(static_cast<float>(msg->angular_velocity.x - old_msg.angular_velocity.x))
-                    << " gyro_y: " << std::fabs(static_cast<float>(msg->angular_velocity.y - old_msg.angular_velocity.y))
-                    << " gyro_z: " << std::fabs(static_cast<float>(msg->angular_velocity.z - old_msg.angular_velocity.z))
-                    << " acc_x: "  << std::fabs(static_cast<float>(msg->linear_acceleration.x - old_msg.linear_acceleration.x))
-                    << " acc_y: "  << std::fabs(static_cast<float>(msg->linear_acceleration.y - old_msg.linear_acceleration.y))
-                    << " acc_z: "  << std::fabs(static_cast<float>(msg->linear_acceleration.z - old_msg.linear_acceleration.z)));
+    ROS_INFO_STREAM(   " gyro_x: " << std::fabs(static_cast<float>(msg->angular_velocity.x - msg_old.angular_velocity.x))
+                    << " gyro_y: " << std::fabs(static_cast<float>(msg->angular_velocity.y - msg_old.angular_velocity.y))
+                    << " gyro_z: " << std::fabs(static_cast<float>(msg->angular_velocity.z - msg_old.angular_velocity.z))
+                    << " acc_x: "  << std::fabs(static_cast<float>(msg->linear_acceleration.x - msg_old.linear_acceleration.x))
+                    << " acc_y: "  << std::fabs(static_cast<float>(msg->linear_acceleration.y - msg_old.linear_acceleration.y))
+                    << " acc_z: "  << std::fabs(static_cast<float>(msg->linear_acceleration.z - msg_old.linear_acceleration.z)));
   }
 
 
@@ -166,7 +166,7 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
   }
 
 
-  old_msg = *msg;
+  msg_old = *msg;
 }
 
 // loads the default trafo from parameter server
