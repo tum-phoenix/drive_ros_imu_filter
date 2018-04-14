@@ -1,5 +1,8 @@
 <launch>
 
+    <!-- vehicle name e.g. cc2017_car -->
+    <arg name="vehicle" default="cc2017_car"/>
+
     <!-- input imu topic name -->
     <arg name="input_topic" default="/from_mav/imu/data_raw"/>
 
@@ -17,7 +20,7 @@
     <arg name="output" default="screen"/>
 
     <!-- default parameter config file -->
-    <arg name="config_file" default="$(find drive_ros_imu_filter)/config/cc2017_car.yaml" />
+    <arg name="config_file" default="$(find drive_ros_imu_filter)/config/$(arg vehicle).yaml" />
 
     <!-- no motion thresholds (if values are below this value for X times, it is considered no motion) -->
     <arg name="no_motion_acc_thres" default="1.5" />
