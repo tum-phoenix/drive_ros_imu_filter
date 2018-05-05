@@ -1,14 +1,15 @@
 # Imu Filter
-Yet another IMU filter. 
+Yet another IMU filter.
 
 This filter does the following:
-* transform IMU message from one tf frame to another
-* autodetect tf parameter, when standing still (autocalibration)
+* `apply_transform`: transform IMU message from one tf frame to another and remove gyroscope offset
+* `broadcast_transform`: autodetect tf transformation to make roll and pitch zero (planar assumption) when not moving
+* `broadcast_transform`: autodetect gyroscope offset when not moving
 
 # Limitations
 Currently the following limitations are present:
-* autocalibration only for roll and pitch angle
-* transformation does not include angular velocity (currently only rotation)
+* autocalibration only for roll and pitch angle (yaw angle is untouched)
+* transformation assumes change in rotation (omega) to be zero
 
 
 # other Filters

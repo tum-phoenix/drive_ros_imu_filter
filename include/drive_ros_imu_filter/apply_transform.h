@@ -2,8 +2,10 @@
 #define FILTER_NODE_H
 
 #include "ros/ros.h"
+#include <mutex>
 
 #include "geometry_msgs/TransformStamped.h"
+#include "geometry_msgs/Vector3.h"
 #include "sensor_msgs/Imu.h"
 
 #include "tf/tf.h"

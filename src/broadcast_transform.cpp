@@ -2,6 +2,7 @@
 
 
 static geometry_msgs::Transform current_trafo;
+static geometry_msgs::Vector3 current_gyro_off;
 static std::string vehicle_frame;
 static std::string imu_frame;
 static std::mutex trafo_mu;
@@ -13,6 +14,8 @@ static sensor_msgs::Imu msg_old;
 static std::vector<sensor_msgs::Imu> msg_buffer;
 
 tf2_ros::StaticTransformBroadcaster* tf2_broadcast;
+
+ros::Publisher gyro_off_pub;
 
 const static int tf_pub_rate = 25;
 
@@ -73,10 +76,11 @@ bool detectNoMotion(const sensor_msgs::Imu::ConstPtr &msg)
   return ret;
 }
 
-// calculates the transformation rotation based on values in message buffer
-bool calculateTrafoRotation(void)
+// calculates the transformation rotation and gyro offsets based on values in message buffer
+bool calculateOffsets(void)
 {
   geometry_msgs::Transform new_trafo;
+  geometry_msgs::Vector3 new_gyro_off;
 
   // keep translation
   new_trafo.translation = current_trafo.translation;
@@ -92,16 +96,24 @@ bool calculateTrafoRotation(void)
   float a_y_mean = 0;
   float a_z_mean = 0;
 
+  // loop over message buffer
   for(auto it = msg_buffer.begin(); it != msg_buffer.end(); ++it)
   {
     a_x_mean += it->linear_acceleration.x;
     a_y_mean += it->linear_acceleration.y;
     a_z_mean += it->linear_acceleration.z;
+    new_gyro_off.x += it->angular_velocity.x;
+    new_gyro_off.y += it->angular_velocity.y;
+    new_gyro_off.z += it->angular_velocity.z;
   }
 
   a_x_mean = a_x_mean / (float) msg_buffer.size();
   a_y_mean = a_y_mean / (float) msg_buffer.size();
   a_z_mean = a_z_mean / (float) msg_buffer.size();
+
+  new_gyro_off.x = new_gyro_off.x / (float) msg_buffer.size();
+  new_gyro_off.y = new_gyro_off.y / (float) msg_buffer.size();
+  new_gyro_off.z = new_gyro_off.z / (float) msg_buffer.size();
 
 
   // keep yaw (without good magnetometer data there is no way to estimate this)
@@ -119,15 +131,14 @@ bool calculateTrafoRotation(void)
   tf::quaternionTFToMsg(q_new, new_trafo.rotation);
 
 
-  // write as new trafo
+  // write as new trafo and gyro off
   trafo_mu.lock();
   current_trafo = new_trafo;
+  current_gyro_off = new_gyro_off;
   trafo_mu.unlock();
 
   return true;
 }
-
-
 
 
 // when a new imu message arrives
@@ -152,8 +163,8 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
       ROS_DEBUG_STREAM("Detected no motion for " << msg_buffer.size() <<" messages.");
       ROS_DEBUG_STREAM("Start autocalibration...");
 
-      // recalculate msg buffer
-      calculateTrafoRotation();
+      // recalculate msg buffer and gyro offset
+      calculateOffsets();
 
       // reset no motion counter and buffer
       no_motion_ct = 0;
@@ -169,8 +180,8 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg)
   msg_old = *msg;
 }
 
-// loads the default trafo from parameter server
-bool load_default_trafo(const ros::NodeHandle* pnh)
+// loads the default trafo and gyro off from parameter server
+bool load_default(const ros::NodeHandle* pnh)
 {
   bool ok = SUCCESS;
   double x,y,z;
@@ -203,6 +214,11 @@ bool load_default_trafo(const ros::NodeHandle* pnh)
   current_trafo.rotation.x = q.x();
   current_trafo.rotation.y = q.y();
   current_trafo.rotation.z = q.z();
+
+
+  current_gyro_off.x = 0;
+  current_gyro_off.y = 0;
+  current_gyro_off.z = 0;
   trafo_mu.unlock();
 
   ROS_INFO_STREAM("Loaded trafo params [x,y,z,roll,pitch,yaw]: "
@@ -216,8 +232,8 @@ bool load_default_trafo(const ros::NodeHandle* pnh)
   return SUCCESS;
 }
 
-// broadcast tf
-void tf_broadcast(void)
+// broadcast tf and publish gyro offset
+void publish(void)
 {
   ros::Rate r(tf_pub_rate);
   while(ros::ok())
@@ -231,7 +247,10 @@ void tf_broadcast(void)
 
       trafo_mu.lock();
       transformStamped.transform = current_trafo;
+      geometry_msgs::Vector3 gyro_off(current_gyro_off);
       trafo_mu.unlock();
+
+      gyro_off_pub.publish(gyro_off);
 
       tf2_broadcast->sendTransform(transformStamped);
     }
@@ -248,7 +267,7 @@ int main(int argc, char **argv)
   ros::NodeHandle pnh("~");
 
   // load default trafo param
-  if(!load_default_trafo(&pnh)){
+  if(!load_default(&pnh)){
     return 1;
   }
 
@@ -278,8 +297,11 @@ int main(int argc, char **argv)
   // setup subscriber and publisher
   ros::Subscriber imu_sub = pnh.subscribe("imu_in", 10, imuCallback);
 
+  // create gyro offset publisher
+  gyro_off_pub = pnh.advertise<geometry_msgs::Vector3>("gyro_off", 10);
+
   // start separate thread
-  std::thread tf_br(tf_broadcast);
+  std::thread tf_br(publish);
 
   // forever loop
   while(ros::ok()){
