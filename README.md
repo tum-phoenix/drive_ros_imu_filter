@@ -1,5 +1,5 @@
 # Imu Filter
-Yet another IMU filter. Further [infos](https://mediatum.ub.tum.de/node?id=1452203) (chapter 4.1.1).
+Yet another IMU filter. Further [infos](https://mediatum.ub.tum.de/node?id=1452203) (chapter 4.1.2).
 
 This filter does the following:
 * `apply_transform`: transform IMU message from one tf frame to another and remove gyroscope offset
